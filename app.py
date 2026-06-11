@@ -11,7 +11,7 @@ app.secret_key = "super_secret_key_for_flash_messages"
 
 # 🔑 ใส่รหัสจาก Telegram ของคุณตรงนี้ (กรุณาใส่รหัสเดิมของคุณลงไปแทนที่ข้อความนี้นะครับ)
 TELEGRAM_TOKEN = '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI'
-TELEGRAM_CHAT_ID = '3765225928'
+TELEGRAM_CHAT_ID = '8638315134'
 GOOGLE_JSON_KEY = 'google_key.json' 
 SPREADSHEET_NAME = 'ระบบลงเวลาพนักงาน'
 
