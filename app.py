@@ -12,12 +12,12 @@ app.secret_key = "super_secret_key_for_flash_messages"
 # 🔑 ตั้งค่าระบบส่งข้อมูลหาบอทหลายตัวพร้อมกัน (แบบที่ 1)
 TELEGRAM_BOTS = [
     {
-        'token': '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI', 
-        'chat_id': '8638315134'
+        'token': '8903902898:AAHQ2UEznPKa97UYujr1Byz1y8ydGl5DKss', 
+        'chat_id': '1429189026'
     },  # 👤 บอทตัวที่ 1 (ของคุณเดิม)
     {
-        'token': '8840649779:AAFXvO5R5WmlAxzQLOgv8KoKLNRIM5pwm5k', 
-        'chat_id': '1429189026'
+        'token': '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI', 
+        'chat_id': '8638315134'
     }   # 👥 บอทตัวที่ 2 (ที่เพิ่มเข้ามาใหม่)
 ]
 
