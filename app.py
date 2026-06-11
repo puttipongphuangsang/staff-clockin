@@ -18,7 +18,11 @@ TELEGRAM_BOTS = [
     {
         'token': '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI', 
         'chat_id': '8638315134'
-    }   # 👥 บอทตัวที่ 2 (ที่เพิ่มเข้ามาใหม่)
+    },  # 👥 บอทตัวที่ 2 (อย่าลืมใส่เครื่องหมายคอมม่าคั่นตรงท้ายบรรทัดนี้ด้วยนะครับ)
+    {
+        'token': '8730348541:AAHmWyDrqOTHrl019-XtdBtgJtiAQxMzD80', 
+        'chat_id': '8992421282'
+    }   # 🤖 บอทตัวที่ 3 (ที่เพิ่มเข้ามาใหม่)
 ]
 
 GOOGLE_JSON_KEY = 'google_key.json' 
