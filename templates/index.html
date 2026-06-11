@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงเวลาทำงานแบบแนบรูป</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 30px 10px; }
+        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; width: 100%; box-sizing: border-box; }
+        input[type="tel"] { padding: 15px; width: 100%; font-size: 18px; margin-bottom: 20px; text-align: center; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .file-upload { background: #007bff; color: white; padding: 12px; border-radius: 8px; display: block; margin-bottom: 20px; cursor: pointer; font-size: 16px; }
+        .file-upload input { display: none; }
+        button { padding: 15px; font-size: 18px; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px 1%; width: 47%; }
+        .btn-in { background-color: #28a745; }
+        .btn-out { background-color: #dc3545; }
+        .btn-disabled { background-color: #cccccc !important; cursor: not-allowed !important; }
+        .hint { color: #666; font-size: 14px; margin-top: -10px; margin-bottom: 20px; display: block; }
+        #cooldown-msg { color: #dc3545; font-weight: bold; margin-bottom: 15px; display: none; }
+        
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; font-size: 16px; white-space: pre-line; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-weight: bold; }
+        
+        /* สไตล์ข้อความเตือนสีแดงกรณีลืมถ่ายรูป */
+        #photo-warning { color: #dc3545; font-weight: bold; margin-bottom: 15px; display: none; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 8px; }
+        .uploaded-success { background-color: #28a745 !important; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>⏱️ ลงเวลาเข้างาน-ออกงาน</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" id="flash-alert">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        <div id="cooldown-msg">⏳ เพิ่งทำการลงเวลาไป กรุณารออีก <span id="timer">60</span> วินาที</div>
+        
+        <div id="photo-warning">⚠️ กรุณาถ่ายรูปเพื่อยืนยันตัวตนก่อนกดบันทึกเวลา</div>
+
+        <form id="clockForm" action="/clock" method="POST" enctype="multipart/form-data" onsubmit="return handleFormSubmit()">
+            
+            <input type="tel" 
+                   id="emp_id"
+                   name="emp_id" 
+                   placeholder="กรอกรหัสพนักงาน 6 หลัก" 
+                   required 
+                   autocomplete="off"
+                   maxlength="6"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+            
+            <label class="file-upload" id="uploadLabel">
+                <span id="uploadText">📸 ถ่ายรูป</span>
+                <input type="file" id="photoInput" name="photo" accept="image/*" capture="user" required onchange="photoSelected()">
+            </label>
+            <span class="hint">(ระบบถ่ายรูปเพื่อยืนยันการเข้างาน-ออกงาน)</span>
+            
+            <button type="submit" name="action" value="เข้างาน" class="btn-in" id="btnIn">🟢 เข้างาน</button>
+            <button type="submit" name="action" value="ออกงาน" class="btn-out" id="btnOut">🔴 ออกงาน</button>
+        </form>
+    </div>
+
+    <script>
+        function checkCooldown() {
+            const cooldownEnd = localStorage.getItem('cooldown_end');
+            if (cooldownEnd) {
+                const now = new Date().getTime();
+                if (now < cooldownEnd) {
+                    const timeLeft = Math.ceil((cooldownEnd - now) / 1000);
+                    activateCooldown(timeLeft);
+                } else {
+                    localStorage.removeItem('cooldown_end');
+                }
+            }
+        }
+
+        function activateCooldown(seconds) {
+            const btnIn = document.getElementById('btnIn');
+            const btnOut = document.getElementById('btnOut');
+            const empIdInput = document.getElementById('emp_id');
+            const uploadLabel = document.getElementById('uploadLabel');
+            const cooldownMsg = document.getElementById('cooldown-msg');
+            const timerSpan = document.getElementById('timer');
+
+            empIdInput.disabled = true;
+            uploadLabel.style.display = 'none';
+            btnIn.disabled = true; btnIn.classList.add('btn-disabled');
+            btnOut.disabled = true; btnOut.classList.add('btn-disabled');
+            cooldownMsg.style.display = 'block';
+
+            let count = seconds;
+            timerSpan.innerText = count;
+
+            const interval = setInterval(() => {
+                count--;
+                timerSpan.innerText = count;
+                if (count <= 0) {
+                    clearInterval(interval);
+                    empIdInput.disabled = false;
+                    uploadLabel.style.display = 'block';
+                    btnIn.disabled = false; btnIn.classList.remove('btn-disabled');
+                    btnOut.disabled = false; btnOut.classList.remove('btn-disabled');
+                    cooldownMsg.style.display = 'none';
+                    localStorage.removeItem('cooldown_end');
+                }
+            }, 1000);
+        }
+
+        // ฟังก์ชันเปลี่ยนสีปุ่มและข้อความเมื่อพนักงานถ่ายรูปเสร็จแล้ว
+        function photoSelected() {
+            const photoInput = document.getElementById('photoInput');
+            const uploadLabel = document.getElementById('uploadLabel');
+            const uploadText = document.getElementById('uploadText');
+            const photoWarning = document.getElementById('photo-warning');
+
+            if (photoInput.files && photoInput.files.length > 0) {
+                uploadText.innerText = "✅ ถ่ายรูปเรียบร้อย";
+                uploadLabel.classList.add('uploaded-success');
+                photoWarning.style.display = 'none'; // ซ่อนคำเตือนทันทีเมื่อถ่ายแล้ว
+            }
+        }
+
+        function handleFormSubmit() {
+            const empId = document.getElementById('emp_id').value;
+            const photoInput = document.getElementById('photoInput');
+            const photoWarning = document.getElementById('photo-warning');
+
+            // 1. ดักเรื่องความยาวรหัส
+            if (empId.length !== 6) {
+                alert("❌ กรุณากรอกรหัสพนักงานให้ครบ 6 หลัก");
+                return false;
+            }
+
+            // 2. ดักเรื่องลืมถ่ายรูป (ถ้าไม่มีไฟล์รูปภาพอยู่ในช่อง)
+            if (!photoInput.files || photoInput.files.length === 0) {
+                photoWarning.style.display = 'block'; // แสดงข้อความเตือนสีแดงที่หน้าจอ
+                window.scrollTo(0, 0); // เลื่อนหน้าจอขึ้นไปบนสุดให้เห็นชัดๆ
+                return false; // บล็อกฟอร์มไม่ให้ส่งข้อมูล
+            }
+
+            const cooldownTime = 60; 
+            const endTimes = new Date().getTime() + (cooldownTime * 1000);
+            localStorage.setItem('cooldown_end', endTimes);
+            return true;
+        }
+
+        window.onload = function() {
+            const flashAlert = document.getElementById('flash-alert');
+            if (flashAlert && flashAlert.classList.contains('alert-danger')) {
+                localStorage.removeItem('cooldown_end');
+            }
+            checkCooldown();
+        };
+    </script>
+
+</body>
+</html>
