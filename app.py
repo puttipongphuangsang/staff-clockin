@@ -3,18 +3,19 @@ from datetime import datetime
 import os
 import requests
 import gspread
+import json  # เพิ่มระบบอ่านข้อความกุญแจดิจิทัล
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key_for_flash_messages"
 
-# 🔑 ใส่รหัสจาก Telegram ของคุณตรงนี้ (เอามาจากสเต็ปที่ 1)
+# 🔑 ใส่รหัสจาก Telegram ของคุณตรงนี้ (กรุณาใส่รหัสเดิมของคุณลงไปแทนที่ข้อความนี้นะครับ)
 TELEGRAM_TOKEN = '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI'
 TELEGRAM_CHAT_ID = '8638315134'
 GOOGLE_JSON_KEY = 'google_key.json' 
 SPREADSHEET_NAME = 'ระบบลงเวลาพนักงาน'
 
-# 🗂️ รายชื่อพนักงานที่ถูกต้องในระบบ (แก้ไขชื่อและรหัส 6 หลักตรงนี้ได้เลยครับ)
+# 🗂️ รายชื่อพนักงานในระบบของคุณ
 EMPLOYEE_DATA = {
     "000001": {"name": "อั้ม", "branch": "สำนักงานใหญ่"},
     "000002": {"name": "บี", "branch": "สำนักงานใหญ่"},
@@ -25,7 +26,18 @@ EMPLOYEE_DATA = {
 def append_to_google_sheet(row_data):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_JSON_KEY, scope)
+        
+        # 🛡️ ส่วนที่แก้ไข: เช็คว่าถ้าอยู่บน Render ให้ดึงกุญแจจาก Environment ถ้าอยู่ในคอมให้ดึงจากไฟล์
+        google_key_env = os.environ.get('GOOGLE_JSON_KEY')
+        
+        if google_key_env:
+            # ใช้กุญแจจากหน้าเว็บ Render
+            key_data = json.loads(google_key_env)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(key_data, scope)
+        else:
+            # ใช้กุญแจจากไฟล์ในคอมพิวเตอร์ของคุณ (ตามที่คุณกดรันแล้วผ่านปกติ)
+            creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_JSON_KEY, scope)
+            
         client = gspread.authorize(creds)
         sheet = client.open(SPREADSHEET_NAME).sheet1
         sheet.append_row(row_data)
