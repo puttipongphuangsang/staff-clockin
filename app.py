@@ -9,9 +9,18 @@ from oauth2client.service_account import ServiceAccountCredentials
 app = Flask(__name__)
 app.secret_key = "super_secret_key_for_flash_messages"
 
-# 🔑 ใส่รหัสจาก Telegram ของคุณตรงนี้ (กรุณาใส่รหัสเดิมของคุณลงไปแทนที่ข้อความนี้นะครับ)
-TELEGRAM_TOKEN = '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI'
-TELEGRAM_CHAT_ID = '8638315134'
+# 🔑 ตั้งค่าระบบส่งข้อมูลหาบอทหลายตัวพร้อมกัน (แบบที่ 1)
+TELEGRAM_BOTS = [
+    {
+        'token': '8948799554:AAHEaRX6UN0Mibc34Hn9PDhZ9A_s4zupvjI', 
+        'chat_id': '8638315134'
+    },  # 👤 บอทตัวที่ 1 (ของคุณเดิม)
+    {
+        'token': '8840649779:AAFXvO5R5WmlAxzQLOgv8KoKLNRIM5pwm5k', 
+        'chat_id': '1429189026'
+    }   # 👥 บอทตัวที่ 2 (ที่เพิ่มเข้ามาใหม่)
+]
+
 GOOGLE_JSON_KEY = 'google_key.json' 
 SPREADSHEET_NAME = 'ระบบลงเวลาพนักงาน'
 
@@ -35,7 +44,7 @@ def append_to_google_sheet(row_data):
             key_data = json.loads(google_key_env)
             creds = ServiceAccountCredentials.from_json_keyfile_dict(key_data, scope)
         else:
-            # ใช้กุญแจจากไฟล์ในคอมพิวเตอร์ของคุณ (ตามที่คุณกดรันแล้วผ่านปกติ)
+            # ใช้กุญแจจากไฟล์ในคอมพิวเตอร์ของคุณ
             creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_JSON_KEY, scope)
             
         client = gspread.authorize(creds)
@@ -46,15 +55,24 @@ def append_to_google_sheet(row_data):
 
 def send_telegram_notify(message, image_path=None):
     try:
-        if image_path and os.path.exists(image_path):
-            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
-            files = {'photo': open(image_path, 'rb')}
-            data = {'chat_id': TELEGRAM_CHAT_ID, 'caption': message}
-            requests.post(url, files=files, data=data)
-        else:
-            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-            data = {'chat_id': TELEGRAM_CHAT_ID, 'text': message}
-            requests.post(url, data=data)
+        # 🔄 วนลูปสั่งให้บอททุกตัวที่ระบุไว้ใน TELEGRAM_BOTS ส่งข้อความออกไปพร้อมกัน
+        for bot in TELEGRAM_BOTS:
+            token = bot['token']
+            chat_id = bot['chat_id']
+            
+            # ตรวจสอบว่าคนเซ็ตตั้งค่าข้ามข้อความเริ่มต้นหรือยัง
+            if 'ใส่_TOKEN_' in token or 'ใส่_CHAT_ID_' in chat_id:
+                continue
+                
+            if image_path and os.path.exists(image_path):
+                url = f"https://api.telegram.org/bot{token}/sendPhoto"
+                files = {'photo': open(image_path, 'rb')}
+                data = {'chat_id': chat_id, 'caption': message}
+                requests.post(url, files=files, data=data)
+            else:
+                url = f"https://api.telegram.org/bot{token}/sendMessage"
+                data = {'chat_id': chat_id, 'text': message}
+                requests.post(url, data=data)
     except Exception as e:
         print("ส่ง Telegram ไม่สำเร็จ:", e)
 
