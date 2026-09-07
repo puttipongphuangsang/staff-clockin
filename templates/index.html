@@ -30,7 +30,7 @@
 
     <div class="box">
         <img src="{{ url_for('static', filename='logo.png') }}" style="max-width: 192px; margin-bottom: 0px;">
-        <h2>⏱️ ลงเวลาเข้างาน-ออกงาน</h2>
+        <h2>⏱️ ลงเวลาเข้างาน - ออกงาน</h2>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -61,7 +61,7 @@
                 <span id="uploadText">📸 ถ่ายรูป</span>
                 <input type="file" id="photoInput" name="photo" accept="image/*" capture="user" required onchange="photoSelected()">
             </label>
-            <span class="hint">(ระบบถ่ายรูปเพื่อยืนยันการเข้างาน-ออกงาน)</span>
+            <span class="hint">(ระบบถ่ายรูปเพื่อยืนยันการเข้างาน - ออกงาน)</span>
             
             <button type="submit" name="action" value="เข้างาน" class="btn-in" id="btnIn">🟢 เข้างาน</button>
             <button type="submit" name="action" value="ออกงาน" class="btn-out" id="btnOut">🔴 ออกงาน</button>
